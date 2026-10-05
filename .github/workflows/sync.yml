@@ -1,0 +1,30 @@
+# 未来WA（mirai-wa.com）の中身を、Miralink のリポジトリ（cocoas-mail-dashboard）から写す。
+# 未来WA の本体は向こうの parent.html。ここはそれを mirai-wa.com のいちばん上（index.html）にも置くだけの入れ物。
+# 直すのは向こうだけ。ここのファイルは手で直さない（次の写しで上書きされる）。
+name: sync
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [sync]
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Kazuhiko0228/cocoas-mail-dashboard
+          path: src
+      - name: copy
+        run: bash sync.sh src
+      - name: commit
+        run: |
+          git config user.name "mirai-wa sync"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A ':!src'
+          git diff --cached --quiet || git commit -m "Miralink から写す（$(cd src && git log -1 --format=%h)）"
+          git push
